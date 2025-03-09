@@ -1,30 +1,29 @@
 from collections import Counter
 
-# English letter frequency (approximate percentage)
 ENGLISH_FREQ_ORDER = "ETAOINSHRDLCUMWFGYPBVKJXQZ"
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 def frequency_analysis(ciphertext):
-    """
-    Analyze the frequency of letters in the ciphertext.
-    """
+    
     ciphertext = ciphertext.upper()
     letter_counts = Counter([char for char in ciphertext if char.isalpha()])
-    sorted_letters = sorted(letter_counts, key=letter_counts.get, reverse=True)
+    sorted_letters = sorted(letter_counts, key=lambda x: (-letter_counts[x], x))
+    return sorted_letters
+
+def complete_with_alphabet(sorted_letters):
+    
+    for letter in ALPHABET:
+        if letter not in sorted_letters:
+            sorted_letters.append(letter)
     return sorted_letters
 
 def create_mapping(cipher_freq, english_freq):
-    """
-    Map the most frequent letters in the ciphertext to the most frequent in English.
-    """
-    mapping = {}
-    for cipher_letter, english_letter in zip(cipher_freq, english_freq):
-        mapping[cipher_letter] = english_letter
+   
+    mapping = {cipher_letter: english_letter for cipher_letter, english_letter in zip(cipher_freq, english_freq)}
     return mapping
 
 def decrypt(ciphertext, mapping):
-    """
-    Decrypt the ciphertext using the frequency mapping.
-    """
+   
     decrypted_text = ''
     for char in ciphertext:
         if char.upper() in mapping:
@@ -33,22 +32,27 @@ def decrypt(ciphertext, mapping):
         else:
             decrypted_text += char
     return decrypted_text
- # Example input
+
+    
 ciphertext = input("Enter the encrypted message: ")
 
-    # Frequency analysis
+   
 cipher_freq_order = frequency_analysis(ciphertext)
 
-    # Create a mapping from cipher letters to estimated plaintext letters
-mapping = create_mapping(cipher_freq_order, ENGLISH_FREQ_ORDER)
+    
+complete_freq_order = complete_with_alphabet(cipher_freq_order)
 
-    # Decrypt the ciphertext
+
+mapping = create_mapping(complete_freq_order, ENGLISH_FREQ_ORDER)
+
+   
 decrypted_text = decrypt(ciphertext, mapping)
 
-    # Output the result
+   
 print("\nEstimated Mapping (Cipher → Plain):")
 for cipher_letter, plain_letter in mapping.items():
         print(f"{cipher_letter} → {plain_letter}")
 
 print("\nMost Likely Decrypted Text:")
 print(decrypted_text)
+
