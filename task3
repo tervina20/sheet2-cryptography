@@ -1,0 +1,100 @@
+def prepare_input(text):
+    text = text.replace(" ", "").upper()
+    text = text.replace("J", "I")  # Playfair treats I/J as the same letter
+    prepared_text = ""
+    i = 0
+    while i < len(text):
+        prepared_text += text[i]
+        if i + 1 < len(text):
+            if text[i] == text[i + 1]:
+                prepared_text += "X"  # Insert 'X' between repeated letters
+                i += 1
+            else:
+                prepared_text += text[i + 1]
+                i += 2
+        else:
+            i += 1
+    if len(prepared_text) % 2 != 0:
+        prepared_text += "X"  # Add 'X' if the length is odd
+    return prepared_text
+
+def create_playfair_matrix(key):
+    key = key.replace(" ", "").upper()
+    key = key.replace("J", "I")
+    matrix = []
+    used_letters = set()
+
+    for letter in key:
+        if letter not in used_letters:
+            matrix.append(letter)
+            used_letters.add(letter)
+
+    for char in "ABCDEFGHIKLMNOPQRSTUVWXYZ":  # 'J' excluded
+        if char not in used_letters:
+            matrix.append(char)
+
+    return [matrix[i:i + 5] for i in range(0, 25, 5)]
+
+def find_position(matrix, char):
+    for i, row in enumerate(matrix):
+        if char in row:
+            return i, row.index(char)
+    return None
+
+def encrypt_pair(pair, matrix):
+    r1, c1 = find_position(matrix, pair[0])
+    r2, c2 = find_position(matrix, pair[1])
+
+    if r1 == r2:  # Same row
+        return matrix[r1][(c1 + 1) % 5] + matrix[r2][(c2 + 1) % 5]
+    elif c1 == c2:  # Same column
+        return matrix[(r1 + 1) % 5][c1] + matrix[(r2 + 1) % 5][c2]
+    else:  # Rectangle swap
+        return matrix[r1][c2] + matrix[r2][c1]
+
+def decrypt_pair(pair, matrix):
+    r1, c1 = find_position(matrix, pair[0])
+    r2, c2 = find_position(matrix, pair[1])
+
+    if r1 == r2:  # Same row
+        return matrix[r1][(c1 - 1) % 5] + matrix[r2][(c2 - 1) % 5]
+    elif c1 == c2:  # Same column
+        return matrix[(r1 - 1) % 5][c1] + matrix[(r2 - 1) % 5][c2]
+    else:  # Rectangle swap
+        return matrix[r1][c2] + matrix[r2][c1]
+
+def playfair_cipher(text, matrix, encrypt=True):
+    pairs = [text[i:i + 2] for i in range(0, len(text), 2)]
+    result = ""
+
+    for pair in pairs:
+        if encrypt:
+            result += encrypt_pair(pair, matrix)
+        else:
+            result += decrypt_pair(pair, matrix)
+
+    return result
+
+def main():
+    keyword = input("Enter the keyword: ")
+    matrix = create_playfair_matrix(keyword)
+
+    print("\nPlayfair Matrix:")
+    for row in matrix:
+        print(" ".join(row))
+
+    choice = input("\nDo you want to encrypt or decrypt? (E/D): ").upper()
+
+    if choice == "E":
+        plaintext = input("Enter the plaintext: ")
+        prepared_text = prepare_input(plaintext)
+        ciphertext = playfair_cipher(prepared_text, matrix, encrypt=True)
+        print(f"\nCiphertext: {ciphertext}")
+    elif choice == "D":
+        ciphertext = input("Enter the ciphertext: ")
+        prepared_text = prepare_input(ciphertext)
+        plaintext = playfair_cipher(prepared_text, matrix, encrypt=False)
+        print(f"\nPlaintext: {plaintext}")
+
+main()
+
